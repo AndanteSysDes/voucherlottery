@@ -6,8 +6,7 @@ import Shopify, { ApiVersion } from "@shopify/shopify-api";
 import Koa from "koa";
 import next from "next";
 import Router from "koa-router";
-// import { MongoClient } from "mongodb";
-import  {myDBget, myDBinsert, myDBset} from './mongodb';
+// import { connectToDatabase } from '../util/mongodb';
 
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
@@ -74,6 +73,10 @@ app.prepare().then(async () => {
       },
     })
   );
+  
+  router.post("/graphql", verifyRequest(), async (ctx, next) => {
+    await Shopify.Utils.graphqlProxy(ctx.req, ctx.res);
+  });
 
   const handleRequest = async (ctx) => {
     await handle(ctx.req, ctx.res);
@@ -188,6 +191,5 @@ app.prepare().then(async () => {
   server.use(router.routes());
   server.listen(port, () => {
     console.log(`> Ready on http://localhost:${port}`);
-    myDBget("test");
   });
 });

@@ -3,7 +3,7 @@ import {Heading, Page } from "@shopify/polaris";
 // import db from "../meddlewares/database";
 // import { connectToDatabase } from '../server/mongodb'
 // import  {myDBget, myDBinsert, myDBset} from './mongodb';
-
+import { connectToDatabase } from '../util/mongodb';
 
 import  MyDBComponent from '../components/myDBComponent';
 

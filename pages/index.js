@@ -1,19 +1,8 @@
 import React from 'react';
 import { EmptyState, Layout, Page } from "@shopify/polaris";
 import { ResourcePicker, TitleBar } from '@shopify/app-bridge-react';
-// import { MongoClient } from "mongodb";
-
-//以下未使用
-  
-  const MONGO_URL = process.env.NEXT_PUBLIC_MONGO_URL;
-  const MONGO_DB_NAME = process.env.NEXT_PUBLIC_MONGO_DB_NAME;
-  const MONGO_COLLECTION = 'shops';
-
-  //DB接続設定
-  const connectOption = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }
+import store from 'store-js';
+import ResourceListWithProducts from '../components/ResourceList';
 
 const img = 'https://cdn.shopify.com/s/files/1/0757/9955/files/empty-state.svg';
 
@@ -50,27 +39,17 @@ class Index extends React.Component{
             <p>Select products and change their price temporarily</p>
           </EmptyState>
         </Layout>
+        <ResourceListWithProducts />
       </Page>
     );
   }
 
   handleSelection = (resources) => {
-    const idsFromResouces = resources.selection.map((product) => product.id );
+    const idsFromResources = resources.selection.map((product) => product.id );
     this.setState({ open: false });
-    console.log(idsFromResouces);
-    // this.mongoHandler();
-    // this.myDBset('ids', idsFromResouces);
-   
+    console.log(idsFromResources);
+    store.set('ids', idsFromResources);
   };
-
-  // mongoHandler = (req, res) => {
-  //   const client = new MongoClient(MONGO_URL);
-  //   client.connect(async (err) => {
-  //     const collection = client.db(MONGO_DB_NAME).collection(MONGO_COLLECTION);
-  //     const shops = await collection.find().toArray();
-  //     console.log(shops);
-  //   });
-  // };
 
 
 }
