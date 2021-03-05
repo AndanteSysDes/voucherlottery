@@ -160,7 +160,10 @@ app.prepare().then(async () => {
   // // -------------------------- //
 
 
-
+  router.post("/inserttest", async (ctx) => {
+    console.log("inserttestに遷移しました");
+    await handleRequest(ctx);
+  });
 
   router.get("/", async (ctx) => {
     const shop = ctx.query.shop;
