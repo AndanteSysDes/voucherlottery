@@ -47,27 +47,14 @@ class Index extends React.Component{
   handleSelection = (resources) => {
     const idsFromResources = resources.selection.map((product) => product.id );
     this.setState({ open: false });
-    console.log(idsFromResources);
+    console.log('ids', idsFromResources);
     store.set('ids', idsFromResources);
+    
+    console.log("store:", store.get('ids'));
   };
 
 
 }
 
-
-
-
-// const Index = () => (
-// //   <Page>
-//     <TitleBar
-//       title="サンプルアプリ"
-//       primaryAction={{
-//         content: '商品を選ぶ',
-//       }}
-//     />
-
-//     <Heading>Shopify app with Node and React 🎉</Heading>
-//   </Page>
-// );
 
 export default Index;
