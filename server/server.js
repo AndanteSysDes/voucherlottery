@@ -7,6 +7,8 @@ import Koa from "koa";
 import next from "next";
 import Router from "koa-router";
 
+const getSubscriptionUrl = require('./getSubscriptionUrl');
+
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
 const dev = process.env.NODE_ENV !== "production";
@@ -42,13 +44,16 @@ app.prepare().then(async () => {
         const { shop, accessToken, scope } = ctx.state.shopify;
         ACTIVE_SHOPIFY_SHOPS[shop] = scope;
 
+        //Register a Webhook
         const response = await Shopify.Webhooks.Registry.register({
           shop,
           accessToken,
           path: "/webhooks",
           topic: "APP_UNINSTALLED",
-          webhookHandler: async (topic, shop, body) =>
-            delete ACTIVE_SHOPIFY_SHOPS[shop],
+          webhookHandler: async (topic, shop, body) =>{
+            console.log('App uninstalled');
+            delete ACTIVE_SHOPIFY_SHOPS[shop];
+          },
         });
 
         if (!response.success) {
@@ -57,8 +62,13 @@ app.prepare().then(async () => {
           );
         }
 
-        // Redirect to app with shop parameter upon auth
+        // Redirect to app with shop parameter upon auth 
         ctx.redirect(`/?shop=${shop}`);
+
+        //Billing
+        // const returnUrl = `https://${Shopify.Context.HOST_NAME}?shop=${shop}`;
+        // const subscriptionUrl = await getSubscriptionUrl(accessToken, shop, returnUrl);
+        // ctx.redirect(subscriptionUrl);
       },
     })
   );
@@ -87,7 +97,7 @@ app.prepare().then(async () => {
     }
   });
 
-
+  // Receive webhooks
   router.post("/webhooks", async (ctx) => {
     try {
       await Shopify.Webhooks.Registry.process(ctx.req, ctx.res);
