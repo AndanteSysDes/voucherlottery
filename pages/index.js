@@ -10,6 +10,8 @@ class Index extends React.Component{
 
   state = { open: false };
   render() {
+    //storeにidsの登録がなければtrueになる
+    const emptyState = !store.get('ids');
     return (
       <Page>
         <TitleBar
@@ -27,19 +29,22 @@ class Index extends React.Component{
           onCancel={() => this.setState({ open: false })}
         />
 
-        <Layout>
-          <EmptyState
-            heading="Select products to start"
-            action={{
-              content: 'Select products',
-              onAction: () => this.setState({ open: true }),
-            }}
-            image={img}
-          >
-            <p>Select products and change their price temporarily</p>
-          </EmptyState>
-        </Layout>
-        <ResourceListWithProducts />
+        {emptyState? (
+          <Layout>
+            <EmptyState
+              heading="Select products to start"
+              action={{
+                content: 'Select products',
+                onAction: () => this.setState({ open: true }),
+              }}
+              image={img}
+            >
+              <p>Select products and change their price temporarily</p>
+            </EmptyState>
+          </Layout>
+        ) : (
+          <ResourceListWithProducts />
+        )}
       </Page>
     );
   }
