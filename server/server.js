@@ -105,5 +105,15 @@ app.prepare().then(async () => {
   server.use(router.routes());
   server.listen(port, () => {
     console.log(`> Ready on http://localhost:${port}`);
+    
+    //変更表示
+    const testconfig = {
+      API_KEY: process.env.SHOPIFY_API_KEY,
+      API_SECRET_KEY: process.env.SHOPIFY_API_SECRET,
+      SCOPES: process.env.SCOPES.split(","),
+      HOST_NAME: process.env.HOST.replace(/https:\/\//, ""),
+    }
+    
+    console.log(testconfig);
   });
 });
