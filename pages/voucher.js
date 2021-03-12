@@ -3,9 +3,10 @@ import React from 'react';
 import { Button, Card, Form, FormLayout,
    Layout, Page, SettingToggle, TextStyle ,TextField} from "@shopify/polaris";
 import store from 'store-js';
-import { Query } from '@apollo/react-components';
+import { Query, Mutation } from '@apollo/react-components';
 import gql from 'graphql-tag';
-import graphql from 'graphql';
+import graphql from 'react-apollo';
+// import VoucherSwitch from '../components/ResourceList';
 
 
   // レイアウト１
@@ -27,6 +28,35 @@ const CHECK_DISCOUNT_CODE = gql`
   }
 `;
 
+
+const PUT_SCRIPT_TAG = gql`
+mutation scriptTagCreate($input: ScriptTagInput!) {
+  scriptTagCreate(input: $input) {
+    scriptTag {
+      id
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}
+`;
+
+const DELETE_SCRIPT_TAG = gql`
+mutation scriptTagDelete($id: ID!) {
+  scriptTagDelete(id: $id) {
+    deletedScriptTagId
+    userErrors {
+      field
+      message
+    }
+  }
+}
+`;
+
+
+
 class Voucher extends React.Component{
 
   state = {
@@ -39,7 +69,7 @@ class Voucher extends React.Component{
   render(){
 
     const active = this.state.active;
-    const contentStatus = active ? 'Disable' : 'Enable';
+    const contentStatus = active ? '無効にする' : '有効にする';
     const textStatus = active ? '有効' : '無効';
   
     // const [DiscountCode, setDiscountCode] = useState('test');
@@ -51,6 +81,17 @@ class Voucher extends React.Component{
 
     // const { DiscountCode } = this.state.DiscountCode;
 
+
+    const variables ={
+      input: {
+        displayScope: "ONLINE_STORE",
+        src: INPUT_JS_URL,
+      }
+    };
+
+    const mutation = active ? DELETE_SCRIPT_TAG : PUT_SCRIPT_TAG;
+
+
     return(
       <Page>
         <Layout>
@@ -58,23 +99,103 @@ class Voucher extends React.Component{
             title="クーポンガチャ"
             description="ストアにクーポンガチャ画面を表示します"
           >
-            <SettingToggle
-              action={{
-                content: contentStatus,
-                onAction: this.handleToggle,
+            <Form>
+            <Mutation mutation={mutation}>
+              {(handleMutation, {error, data} ) => {
+
+                //エラーハンドリング
+                if(error) console.log(error.message);
+
+                //正常終了通知
+                if(data) {
+                  console.log(data);
+
+                  if(data.scriptTagCreate){
+                    console.log("スクリプトタグを挿入");
+
+                    const createdTags = store.get('scripttags') ? store.get('scripttags') : [];
+
+                    // if(store.get('scripttags')){
+                    //   createdTags = store.get('scripttags');
+                    // }
+                    createdTags.push(
+                      data.scriptTagCreate.scriptTag
+                    );
+
+
+                    store.set('scripttags', createdTags );
+                    console.log(store.get('scripttags'));
+                  }
+
+                  if(data.scriptTagDelete){
+
+                    //createdTags = ["{id: gid/....}", "{id: gid/....}", ...]
+                    const createdTags = store.get('scripttags');
+
+                    const find = createdTags.filter((item, index) => {
+                      if(item.id != data.scriptTagDelete.deletedScriptTagId) return true;
+                    });
+
+
+                    console.log('find:', find);
+                    console.log("スクリプトタグを削除");
+
+
+                    store.set('scripttags', find);
+
+
+                  }
+
+                }
+
+                return(
+
+                  <SettingToggle
+                  action={{
+                    content: contentStatus,
+                    onAction: () => {
+                      this.handleToggle();
+                      const v = this.makeVariables();
+                      console.log(v);
+                      if(v){
+                        handleMutation({
+                          variables: v.variables,
+                        });
+                      }
+                    }  
+                  }}
+                  enabled={active}
+                >
+                  この設定は <TextStyle variation="strong">{textStatus}</TextStyle>になっています。
+                </SettingToggle>
+    
+
+
+                );
               }}
-              enabled={active}
-            >
-              この設定は <TextStyle variation="strong">{textStatus}</TextStyle>になっています。
-            </SettingToggle>
+            </Mutation>
+
+
+
+
+
+           
+
+
+
+            </Form>
+
+
+
+
           </Layout.AnnotatedSection>
 
           <Layout.AnnotatedSection
             title="ガチャ対象クーポン"
             description="クーポンガチャで当たるクーポンコードを入力してください。確率は50%です。"
           >
-
-
+            
+            
           {/* <Query query={CHECK_DISCOUNT_CODE}>
           { ({ data, loading, error }) => {
           if (loading) return <div>Loading…</div>;
@@ -97,7 +218,7 @@ class Voucher extends React.Component{
                 />
                 
                 <Button primary submit>
-                  Save
+                  保存
                 </Button>
 
                 </FormLayout>
@@ -126,11 +247,43 @@ class Voucher extends React.Component{
     this.setState(({ active }) => {
       return {active: !active};
     });
-    
-    // console.log(INPUT_JS_URL);
-
   };
   
+  makeVariables = () => {
+    console.log(this.state.active);
+    if(!this.state.active){
+      console.log("有効にしました") ;
+      return {
+        // mutation: PUT_SCRIPT_TAG,
+        variables: {
+          input: {
+            displayScope: "ONLINE_STORE",
+            src: INPUT_JS_URL,
+          }
+        }
+      };
+
+    }else{
+      console.log("無効にしました") ;
+
+      const targetTags = store.get('scripttags') ? store.get('scripttags') : null;
+
+      if (!targetTags) return; 
+      
+      
+
+      console.log("保存済みスクリプトタグ",store.get('scripttags'));
+
+      return {
+        // mutation: DELETE_SCRIPT_TAG;
+        variables: {
+          id: targetTags[0].id
+        }
+      };
+    }
+  };
+
+
   handleTextFieldChange = (field) => {
     return (value) => {this.setState( {[field]: value} )};
   };
